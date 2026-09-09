@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: Network-Security
+Version: 0.0.2
+Author: Atul
+Author-email: atulchoudhary3213@gmail.com
+Requires-Dist: python-dotenv
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: pymongo
+Requires-Dist: certifi
+Requires-Dist: setuptools
+Requires-Dist: pymongo[srv]==3.12
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
