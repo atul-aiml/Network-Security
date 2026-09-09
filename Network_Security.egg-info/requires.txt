@@ -1,7 +1,0 @@
-python-dotenv
-pandas
-numpy
-pymongo
-certifi
-setuptools
-pymongo[srv]==3.12
