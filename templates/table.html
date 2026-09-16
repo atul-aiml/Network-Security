@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prediction Results — Network Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F172A;
+    --panel: #16213E;
+    --panel-alt: #1B2749;
+    --border: #2A3655;
+    --text: #E2E8F0;
+    --muted: #8B98B8;
+    --safe: #34D399;
+    --safe-bg: rgba(52, 211, 153, 0.12);
+    --threat: #F87171;
+    --threat-bg: rgba(248, 113, 113, 0.12);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px 24px 80px;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  header {
+    margin-bottom: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  .meta {
+    display: flex;
+    gap: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .meta strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--panel-alt);
+    color: var(--text);
+    text-align: left;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.015);
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  tbody tr:hover td {
+    color: var(--text);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+
+  .tag.safe {
+    background: var(--safe-bg);
+    color: var(--safe);
+  }
+
+  .tag.threat {
+    background: var(--threat-bg);
+    color: var(--threat);
+  }
+
+  .tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 24px 12px 60px; }
+    h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Prediction Results</h1>
+        <p class="subtitle">Batch classification output from the trained model</p>
+      </div>
+      <div class="meta">
+        <span><strong id="rowCount">—</strong> rows</span>
+        <span id="timestamp"></span>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="table-scroll" id="tableScroll">
+        {{ table | safe }}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Timestamp
+    document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+    const table = document.querySelector('#tableScroll table');
+
+    if (table) {
+      // Row count
+      const bodyRows = table.querySelectorAll('tbody tr');
+      document.getElementById('rowCount').textContent = bodyRows.length;
+
+      // Find a "Result" column if it exists, and color-code it
+      const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th, tr:first-child td'))
+        .map(el => el.textContent.trim().toLowerCase());
+      const resultIndex = headers.findIndex(h => h === 'result' || h === 'prediction' || h.includes('result'));
+
+      if (resultIndex !== -1) {
+        bodyRows.forEach(row => {
+          const cells = row.querySelectorAll('td');
+          const cell = cells[resultIndex];
+          if (!cell) return;
+          const val = cell.textContent.trim();
+          const isThreat = val === '-1' || val.toLowerCase() === 'phishing' || val === '0';
+          const isSafe = val === '1' || val.toLowerCase() === 'legitimate';
+          if (isThreat || isSafe) {
+            const tag = document.createElement('span');
+            tag.className = 'tag ' + (isThreat ? 'threat' : 'safe');
+            tag.textContent = isThreat ? 'Phishing' : 'Legitimate';
+            cell.textContent = '';
+            cell.appendChild(tag);
+          }
+        });
+      }
+    } else {
+      document.getElementById('tableScroll').innerHTML =
+        '<div class="empty-state">No prediction data available.</div>';
+    }
+  </script>
+</body>
+</html>

@@ -22,7 +22,9 @@ from sklearn.ensemble import (
     GradientBoostingClassifier,
     RandomForestClassifier,
 )
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+
+import dagshub
+dagshub.init(repo_owner='atul-aiml', repo_name='Network-Security', mlflow=True)
 
 class ModelTrainer:
     def __init__(self,model_trainer_config:ModelTrainerConfig, data_transformation_artifact:DataTransformationArtifact):
@@ -98,8 +100,6 @@ class ModelTrainer:
         ## Track the experiements with mlflow
         self.track_mlflow(best_model, classification_train_metric)
 
-
-
         y_test_pred=best_model.predict(x_test)
         classification_test_metric=get_classification_score(y_true=y_test,y_pred=y_test_pred)
 
@@ -113,7 +113,7 @@ class ModelTrainer:
         Network_Model=NetworkModel(preprocessor=preprocessor,model=best_model)
         save_object(self.model_trainer_config.trained_model_file_path,obj=Network_Model)
         #model pusher
-        save_object("final_model/model.pkl",best_model)
+        save_object("final_models/model.pkl",best_model)
         
 
         ## Model Trainer Artifact
